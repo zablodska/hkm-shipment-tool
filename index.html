@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunkemöller — Shipment Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0f0f0f;
+    --white: #f5f3ef;
+    --pink: #e8b4bc;
+    --pink-dark: #c4777f;
+    --pink-light: #f5dde0;
+    --gray: #888;
+    --border: #d8d4ce;
+    --success-bg: #e8f5e9;
+    --success: #2e7d32;
+    --error-bg: #fce4ec;
+    --error: #c62828;
+    --card-bg: #faf8f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--black);
+    color: var(--white);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: .08em;
+    opacity: .9;
+  }
+
+  .logo span { color: var(--pink); }
+
+  .version {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    opacity: .4;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .tab {
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--gray);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    transition: color .15s;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: .02em;
+  }
+
+  .tab.active {
+    color: var(--black);
+    border-bottom-color: var(--black);
+  }
+
+  .tab:hover:not(.active) { color: var(--black); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 1rem;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gray);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .field input, .field select {
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--black);
+    transition: border-color .15s;
+    width: 100%;
+  }
+
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--pink-dark);
+  }
+
+  .field input.required:invalid { border-color: #ffcdd2; }
+
+  .line-item-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .line-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .line-item-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  .remove-btn {
+    font-size: 11px;
+    color: var(--pink-dark);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .remove-btn:hover { text-decoration: underline; }
+
+  .add-btn {
+    width: 100%;
+    padding: 9px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--gray);
+    background: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all .15s;
+  }
+
+  .add-btn:hover {
+    border-color: var(--pink-dark);
+    color: var(--pink-dark);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1.5rem;
+    align-items: center;
+  }
+
+  .btn-send {
+    padding: 11px 28px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity .15s;
+    letter-spacing: .02em;
+  }
+
+  .btn-send:hover { opacity: .8; }
+  .btn-send:active { opacity: .6; }
+  .btn-send:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-clear {
+    padding: 11px 20px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    background: none;
+    color: var(--gray);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn-clear:hover { border-color: var(--black); color: var(--black); }
+
+  .result {
+    margin-top: 1.25rem;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    display: none;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .result.success { background: var(--success-bg); color: var(--success); display: block; }
+  .result.error   { background: var(--error-bg);   color: var(--error);   display: block; }
+  .result.loading { background: #f5f5f5; color: var(--gray); display: block; }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--gray);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .config-note {
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 1rem;
+    font-family: 'DM Mono', monospace;
+  }
+
+  @media (max-width: 600px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    header { padding: .75rem 1rem; }
+    .container { padding: 1.5rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">HKM <span>//</span> Shipment Tool</div>
+  <div class="version">v2.0</div>
+</header>
+
+<div class="container">
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('ship', this)">Ship order</button>
+    <button class="tab" onclick="switchTab('return', this)">Return order</button>
+    <button class="tab" onclick="switchTab('config', this)">API config</button>
+  </div>
+
+  <!-- ── SHIP ORDER ── -->
+  <div id="panel-ship" class="panel active">
+
+    <div class="card">
+      <div class="card-title">Order details</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field"><label>External order number *</label><input id="s-ext" placeholder="350163877" required></div>
+        <div class="field"><label>Picking order number *</label><input id="s-pick" type="number" placeholder="7100049324" required></div>
+      </div>
+      <div class="grid3" style="margin-bottom:12px">
+        <div class="field"><label>Channel code *</label><input id="s-channel" placeholder="HKM-Webshop-NL" required></div>
+        <div class="field"><label>Warehouse number *</label><input id="s-warehouse" type="number" placeholder="1560" required></div>
+        <div class="field"><label>Shipping costs (€) *</label><input id="s-shipcost" type="number" step="0.01" placeholder="0" required></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Total price order (€) *</label><input id="s-totalprice" type="number" step="0.01" placeholder="0" required></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mispick items</div>
+      <div id="mispick-list"></div>
+      <button class="add-btn" onclick="addMispick()">+ add mispick item</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn-send" onclick="sendShip()">Send ship order</button>
+      <button class="btn-clear" onclick="clearForm('ship')">Clear</button>
+    </div>
+    <div id="ship-result" class="result"></div>
+  </div>
+
+  <!-- ── RETURN ORDER ── -->
+  <div id="panel-return" class="panel">
+
+    <div class="card">
+      <div class="card-title">Order details</div>
+      <div class="field">
+        <label>External order number *</label>
+        <input id="r-ext" placeholder="350163877" required>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Line items</div>
+      <div id="return-list"></div>
+      <button class="add-btn" onclick="addReturnItem()">+ add line item</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Return details</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field"><label>Return date *</label><input id="r-date" placeholder="2026-04-28T13:00:00" required></div>
+        <div class="field"><label>Return location *</label><input id="r-location" placeholder="DC" required></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Location number *</label><input id="r-locnum" type="number" placeholder="1560" required></div>
+        <div class="field"><label>Total return price (€) *</label><input id="r-totalprice" type="number" step="0.01" placeholder="29.99" required></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Shipment</div>
+      <div class="grid2">
+        <div class="field"><label>Shipping date *</label><input id="r-shipdate" placeholder="2026-04-14T21:01:55" required></div>
+        <div class="field"><label>Track & trace number</label><input id="r-track" placeholder="Leave empty if none"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-send" onclick="sendReturn()">Send return order</button>
+      <button class="btn-clear" onclick="clearForm('return')">Clear</button>
+    </div>
+    <div id="return-result" class="result"></div>
+  </div>
+
+  <!-- ── CONFIG ── -->
+  <div id="panel-config" class="panel">
+    <div class="card">
+      <div class="card-title">API credentials</div>
+      <div class="field" style="margin-bottom:12px">
+        <label>x-client-id</label>
+        <input id="cfg-id" placeholder="Enter your x-client-id">
+      </div>
+      <div class="field">
+        <label>x-client-secret</label>
+        <input id="cfg-secret" type="password" placeholder="Enter your x-client-secret">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Endpoints</div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Ship order URL</label>
+        <input id="cfg-shipurl" value="https://x-jd-api-acc.de-c1.eu1.cloudhub.io/hunkemoller/transport/x/v1/order/update">
+      </div>
+      <div class="field">
+        <label>Return order URL</label>
+        <input id="cfg-returl" value="https://x-jd-api-acc.de-c1.eu1.cloudhub.io/hunkemoller/transport/x/v1/order/return">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn-send" onclick="saveConfig()">Save config</button>
+    </div>
+    <div id="cfg-result" class="result"></div>
+    <p class="config-note">* Credentials are saved in your browser's local storage.</p>
+  </div>
+
+</div>
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Config (localStorage) ──────────────────────────────────────────────────
+function loadConfig() {
+  const id     = localStorage.getItem('hkm_client_id');
+  const secret = localStorage.getItem('hkm_client_secret');
+  const surl   = localStorage.getItem('hkm_ship_url');
+  const rurl   = localStorage.getItem('hkm_ret_url');
+  if (id)     document.getElementById('cfg-id').value      = id;
+  if (secret) document.getElementById('cfg-secret').value  = secret;
+  if (surl)   document.getElementById('cfg-shipurl').value = surl;
+  if (rurl)   document.getElementById('cfg-returl').value  = rurl;
+}
+
+function saveConfig() {
+  localStorage.setItem('hkm_client_id',     document.getElementById('cfg-id').value);
+  localStorage.setItem('hkm_client_secret', document.getElementById('cfg-secret').value);
+  localStorage.setItem('hkm_ship_url',      document.getElementById('cfg-shipurl').value);
+  localStorage.setItem('hkm_ret_url',       document.getElementById('cfg-returl').value);
+  showResult('cfg-result', 'success', 'Config saved to browser storage.');
+}
+
+function getHeaders() {
+  return {
+    'Content-Type'   : 'application/json',
+    'x-client-id'    : localStorage.getItem('hkm_client_id')     || document.getElementById('cfg-id').value,
+    'x-client-secret': localStorage.getItem('hkm_client_secret') || document.getElementById('cfg-secret').value,
+  };
+}
+
+// ── Mispick items ──────────────────────────────────────────────────────────
+let mispickCount = 0;
+function addMispick() {
+  const id  = 'mp-' + mispickCount++;
+  const div = document.createElement('div');
+  div.className = 'line-item-card';
+  div.id = id;
+  div.innerHTML = `
+    <div class="line-item-header">
+      <span class="line-item-label">Mispick item ${mispickCount}</span>
+      <button class="remove-btn" onclick="document.getElementById('${id}').remove()">remove</button>
+    </div>
+    <div class="grid3" style="margin-bottom:10px">
+      <div class="field"><label>EAN</label><input class="mp-ean" placeholder="8716028786421"></div>
+      <div class="field"><label>SKU number</label><input class="mp-sku" placeholder="85767001"></div>
+      <div class="field"><label>Quantity</label><input class="mp-qty" type="number" placeholder="1"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Down payment (€)</label><input class="mp-pay" type="number" step="0.01" placeholder="29.99"></div>
+      <div class="field"><label>Picking line number</label><input class="mp-line" type="number" placeholder="1"></div>
+    </div>`;
+  document.getElementById('mispick-list').appendChild(div);
+}
+
+// ── Return line items ──────────────────────────────────────────────────────
+let returnCount = 0;
+function addReturnItem() {
+  const id  = 'ri-' + returnCount++;
+  const div = document.createElement('div');
+  div.className = 'line-item-card';
+  div.id = id;
+  div.innerHTML = `
+    <div class="line-item-header">
+      <span class="line-item-label">Line item ${returnCount}</span>
+      <button class="remove-btn" onclick="document.getElementById('${id}').remove()">remove</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>EAN *</label><input class="ri-ean" placeholder="8716028786421" required></div>
+      <div class="field"><label>SKU number *</label><input class="ri-sku" placeholder="85767001" required></div>
+    </div>`;
+  document.getElementById('return-list').appendChild(div);
+}
+
+// ── Result display ─────────────────────────────────────────────────────────
+function showResult(elId, type, msg) {
+  const el = document.getElementById(elId);
+  el.className = 'result ' + type;
+  el.innerHTML = type === 'loading'
+    ? `<span class="spinner"></span>${msg}`
+    : msg;
+}
+
+// ── API call ───────────────────────────────────────────────────────────────
+async function callApi(url, payload, resultElId) {
+  showResult(resultElId, 'loading', 'Sending request…');
+  try {
+    const res  = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(payload) });
+    const text = await res.text();
+    let body;
+    try { body = JSON.parse(text); } catch { body = text; }
+
+    if (res.ok) {
+      showResult(resultElId, 'success', `✓ Accepted (HTTP ${res.status})\n\n${JSON.stringify(body, null, 2)}`);
+    } else {
+      showResult(resultElId, 'error', `✗ Rejected (HTTP ${res.status})\n\n${JSON.stringify(body, null, 2)}`);
+    }
+  } catch (e) {
+    showResult(resultElId, 'error', `✗ Network error: ${e.message}`);
+  }
+}
+
+// ── Send ship ──────────────────────────────────────────────────────────────
+function sendShip() {
+  const mispicks = [...document.querySelectorAll('#mispick-list .line-item-card')].map(card => ({
+    DownPaymentAmount      : parseFloat(card.querySelector('.mp-pay').value)  || 0,
+    Ean                    : parseInt(card.querySelector('.mp-ean').value,  10),
+    PickingOrderLineNumber : parseInt(card.querySelector('.mp-line').value, 10),
+    Quantity               : parseInt(card.querySelector('.mp-qty').value,  10),
+    SKUNumber              : card.querySelector('.mp-sku').value,
+  }));
+
+  const payload = {
+    ChannelCode         : document.getElementById('s-channel').value,
+    ExternalOrderNumber : document.getElementById('s-ext').value,
+    PickingOrderNumber  : parseInt(document.getElementById('s-pick').value, 10),
+    Shipment            : { Mispicks: mispicks },
+    ShippingCostsAmount : parseFloat(document.getElementById('s-shipcost').value)   || 0,
+    TotalPriceOrder     : parseFloat(document.getElementById('s-totalprice').value) || 0,
+    WarehouseNumber     : parseInt(document.getElementById('s-warehouse').value, 10),
+  };
+
+  const url = document.getElementById('cfg-shipurl').value;
+  callApi(url, payload, 'ship-result');
+}
+
+// ── Send return ────────────────────────────────────────────────────────────
+function sendReturn() {
+  const lineItems = [...document.querySelectorAll('#return-list .line-item-card')].map(card => ({
+    Ean       : parseInt(card.querySelector('.ri-ean').value, 10),
+    SKUNumber : card.querySelector('.ri-sku').value,
+  }));
+
+  const trackRaw  = document.getElementById('r-track').value.trim();
+  const trackClean = trackRaw.replace(/^["' ]+|["' ]+$/g, '');
+
+  const payload = {
+    ExternalOrderNumber : document.getElementById('r-ext').value,
+    LineItems           : lineItems,
+    Return: {
+      Date             : document.getElementById('r-date').value,
+      Location         : document.getElementById('r-location').value,
+      LocationNumber   : parseInt(document.getElementById('r-locnum').value, 10),
+      TotalReturnPrice : parseFloat(document.getElementById('r-totalprice').value) || 0,
+    },
+    Shipment: {
+      ShippingInfo: [{
+        ShippingDate        : document.getElementById('r-shipdate').value,
+        TrackAndTraceReturn : trackClean,
+      }],
+    },
+  };
+
+  const url = document.getElementById('cfg-returl').value;
+  callApi(url, payload, 'return-result');
+}
+
+// ── Clear form ─────────────────────────────────────────────────────────────
+function clearForm(type) {
+  if (type === 'ship') {
+    ['s-ext','s-pick','s-channel','s-warehouse','s-shipcost','s-totalprice']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mispick-list').innerHTML = '';
+    document.getElementById('ship-result').className = 'result';
+    mispickCount = 0;
+  } else {
+    ['r-ext','r-date','r-location','r-locnum','r-totalprice','r-shipdate','r-track']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('return-list').innerHTML = '';
+    document.getElementById('return-result').className = 'result';
+    returnCount = 0;
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadConfig();
+</script>
+</body>
+</html>
