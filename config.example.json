@@ -1,0 +1,11 @@
+{
+  "credentials": {
+    "clientId":     "cdcfa767a8a9432f9d0d6757c4815256",
+    "clientSecret": "bd1c407D1fa748CaBE638cEFDc306F4d"
+  },
+  "endpoints": {
+    "ship":   "https://x-jd-api-acc.de-c1.eu1.cloudhub.io/hunkemoller/transport/x/v1/order/update",
+    "return": "https://x-jd-api-acc.de-c1.eu1.cloudhub.io/hunkemoller/transport/x/v1/order/return"
+  },
+  "logFile": "./shipment.log"
+}
